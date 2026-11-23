@@ -27,8 +27,13 @@ class Settings:
             for origin in _raw_origins.split(",")
             if origin.strip()
         ]
-        # Always allow standard local dev ports for convenience if not already present
-        for local_origin in ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"]:
+        # Always allow standard local dev ports and production frontend domains
+        for local_origin in [
+            "https://sachbot-pro.vinaykumarhalburge89.workers.dev",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000"
+        ]:
             if local_origin not in CORS_ORIGINS:
                 CORS_ORIGINS.append(local_origin)
 
