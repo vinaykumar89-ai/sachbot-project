@@ -139,12 +139,13 @@ export default function App() {
       // Session context payload
       formData.append('session_id', sessionId);
       formData.append('active_view', 'chat');
-      if (activeReport?.id) {
-        formData.append('last_verdict_id', activeReport.id);
+      const verdictIdToBind = queryData.last_verdict_id || activeReport?.id;
+      if (verdictIdToBind) {
+        formData.append('last_verdict_id', verdictIdToBind);
       }
 
       if (queryData.imageFile) {
-        formData.append('image', queryData.imageFile);
+        formData.append('image', queryData.imageFile, queryData.imageFile.name || 'image.jpg');
       }
       if (queryData.croppedBlob) {
         formData.append('cropped_image', queryData.croppedBlob, 'focus_crop.jpg');
@@ -202,6 +203,7 @@ export default function App() {
           text: activeReport.raw_input || '',
           url: activeReport.url || '',
           language_pref: activeReport.detected_language || 'auto',
+          last_verdict_id: activeReport.id,
         },
         true
       );
