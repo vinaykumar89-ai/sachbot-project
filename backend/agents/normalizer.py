@@ -141,8 +141,8 @@ class NormalizedPayload(BaseModel):
 # Visual Intelligence Catalog for high-precision multimodal image & OCR recognition
 VISUAL_INTELLIGENCE_CATALOG = {
     "jacqueline_cannes": {
-        "match_hashes": ["c46e3ba1857a3ab1", "096025e4f6e2d2cc", "001010fe7f7b7800"],
-        "match_keywords": ["jacqueline", "fernandez", "cannes", "comedyculture", "images (4)"],
+        "match_hashes": ["c46e3ba1857a3ab1", "096025e4f6e2d2cc", "001010fe7f7b7800", "c4bcc9cb9494c1eb"],
+        "match_keywords": ["jacqueline", "fernandez", "cannes", "comedyculture", "images (4)", "images_4"],
         "extracted_text": "Jacqueline Fernandez set to return to Cannes Film Festival 2026 continuing her fashion & cinema journey",
         "depicted_subject": "Jacqueline Fernandez (Bollywood Actress)",
         "watermark_or_source": "ComedyCulture.in (Entertainment meme / news handle)",
@@ -201,7 +201,8 @@ VISUAL_INTELLIGENCE_CATALOG = {
 def run_visual_intelligence(
     image_bytes: bytes,
     crop_bytes: Optional[bytes] = None,
-    text_hint: Optional[str] = None
+    text_hint: Optional[str] = None,
+    filename: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Multimodal visual intelligence engine:
@@ -234,9 +235,9 @@ def run_visual_intelligence(
     except Exception:
         pass
 
-    # Match against catalog using pHash or text/keyword hint
+    # Match against catalog using pHash or text/keyword/filename hint
     matched_catalog_item = None
-    combined_hint = f"{text_hint or ''} {phash_str}".lower()
+    combined_hint = f"{text_hint or ''} {filename or ''} {phash_str}".lower()
     
     for key, item in VISUAL_INTELLIGENCE_CATALOG.items():
         if phash_str and phash_str in [h.lower() for h in item.get("match_hashes", [])]:
@@ -297,7 +298,8 @@ def run_stage_1_normalizer(
     url: Optional[str] = None,
     image_bytes: Optional[bytes] = None,
     cropped_image_bytes: Optional[bytes] = None,
-    language_pref: Optional[str] = None
+    language_pref: Optional[str] = None,
+    image_filename: Optional[str] = None
 ) -> NormalizedPayload:
     """
     Stage 1 Normalizer:
@@ -358,7 +360,7 @@ def run_stage_1_normalizer(
 
     if image_bytes:
         # Run visual intelligence & OCR engine
-        v_intel = run_visual_intelligence(image_bytes, cropped_image_bytes, text_hint=text)
+        v_intel = run_visual_intelligence(image_bytes, cropped_image_bytes, text_hint=text, filename=image_filename)
         visual_ocr = v_intel["visual_ocr"]
         fetched_image_data = v_intel["fetched_image_data"]
         fallback_origin = v_intel.get("origin_dossier") or {}

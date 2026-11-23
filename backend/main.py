@@ -426,7 +426,8 @@ async def verify_claim(
             url=clean_url,
             image_bytes=image_bytes,
             cropped_image_bytes=cropped_image_bytes,
-            language_pref=clean_lang
+            language_pref=clean_lang,
+            image_filename=clean_image.filename if clean_image else None
         )
         s1_ms = max(1, int((time.perf_counter() - t_stage1) * 1000))
         audit_log.append({
@@ -549,6 +550,20 @@ async def verify_claim(
         saved["image_origin_metadata"] = report.image_origin_metadata
         saved["triggered_skills"] = triggered_skills_dump
         saved["cards"] = skill_result.cards
+
+        # Compile top-level sources for frontend verdict card
+        compiled_sources = []
+        for cv in report.claim_verdicts:
+            for s in cv.sources:
+                if not any(cs.get("url") == s.get("url") for cs in compiled_sources):
+                    compiled_sources.append(s)
+        if not compiled_sources and evidences:
+            for ev in evidences:
+                for s in ev.sources:
+                    s_dict = s.model_dump() if hasattr(s, "model_dump") else s
+                    if not any(cs.get("url") == s_dict.get("url") for cs in compiled_sources):
+                        compiled_sources.append(s_dict)
+        saved["sources"] = compiled_sources
 
         # Dynamic contextual quick-replies based on verdict & input
         final_quick_replies = list(skill_result.quick_replies) if skill_result.quick_replies else []
