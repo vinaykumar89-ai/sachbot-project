@@ -2,10 +2,17 @@ import os
 import json
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
-from backend.agents.extractor import AtomicClaim
-from backend.agents.researcher import ResearchedClaimEvidence, KNOWN_VERIFIED_DATABASE
-from backend.services.gemini_client import gemini_client
-from backend.config import settings
+
+try:
+    from backend.agents.extractor import AtomicClaim
+    from backend.agents.researcher import ResearchedClaimEvidence, KNOWN_VERIFIED_DATABASE
+    from backend.services.gemini_client import gemini_client
+    from backend.config import settings
+except ImportError:
+    from agents.extractor import AtomicClaim
+    from agents.researcher import ResearchedClaimEvidence, KNOWN_VERIFIED_DATABASE
+    from services.gemini_client import gemini_client
+    from config import settings
 
 class ClaimVerdict(BaseModel):
     id: int

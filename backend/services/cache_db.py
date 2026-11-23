@@ -5,8 +5,13 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any
 from sqlalchemy import create_engine, Column, Integer, String, Text, Float, DateTime, ForeignKey, Index
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship, joinedload
-from backend.config import settings
-from backend.services.live_grounding import normalize_query_entities
+
+try:
+    from backend.config import settings
+    from backend.services.live_grounding import normalize_query_entities
+except ImportError:
+    from config import settings
+    from services.live_grounding import normalize_query_entities
 
 Base = declarative_base()
 

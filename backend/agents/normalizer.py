@@ -3,12 +3,21 @@ import re
 import base64
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
-from backend.services.media_parser import extract_article_content, extract_social_media_info, detect_url_type
-from backend.services.domain_checker import check_domain_reputation
-from backend.services.image_forensics import analyze_image_forensics
-from backend.services.gemini_client import gemini_client
-from backend.services.live_grounding import normalize_query_entities
-from backend.config import settings
+
+try:
+    from backend.services.media_parser import extract_article_content, extract_social_media_info, detect_url_type
+    from backend.services.domain_checker import check_domain_reputation
+    from backend.services.image_forensics import analyze_image_forensics
+    from backend.services.gemini_client import gemini_client
+    from backend.services.live_grounding import normalize_query_entities
+    from backend.config import settings
+except ImportError:
+    from services.media_parser import extract_article_content, extract_social_media_info, detect_url_type
+    from services.domain_checker import check_domain_reputation
+    from services.image_forensics import analyze_image_forensics
+    from services.gemini_client import gemini_client
+    from services.live_grounding import normalize_query_entities
+    from config import settings
 
 # Indian regional language and Hinglish detection heuristics
 INDIC_SCRIPTS = {

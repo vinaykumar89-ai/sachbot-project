@@ -1,13 +1,24 @@
 from typing import List, Dict, Any, Tuple, Optional
-from backend.skills.base import (
-    BaseSkill,
-    SkillExecutionResult,
-    SkillTriggerInfo
-)
-from backend.skills.reverify_live import ReverifyLiveSkill
-from backend.skills.domain_audit import DomainAuditSkill
-from backend.skills.generate_share_card import GenerateShareCardSkill
-from backend.skills.escalate_review import EscalateReviewSkill
+try:
+    from backend.skills.base import (
+        BaseSkill,
+        SkillExecutionResult,
+        SkillTriggerInfo
+    )
+    from backend.skills.reverify_live import ReverifyLiveSkill
+    from backend.skills.domain_audit import DomainAuditSkill
+    from backend.skills.generate_share_card import GenerateShareCardSkill
+    from backend.skills.escalate_review import EscalateReviewSkill
+except ImportError:
+    from skills.base import (
+        BaseSkill,
+        SkillExecutionResult,
+        SkillTriggerInfo
+    )
+    from skills.reverify_live import ReverifyLiveSkill
+    from skills.domain_audit import DomainAuditSkill
+    from skills.generate_share_card import GenerateShareCardSkill
+    from skills.escalate_review import EscalateReviewSkill
 
 class SkillRegistry:
     def __init__(self):

@@ -3,7 +3,11 @@ import json
 import base64
 from typing import Dict, Any, List, Optional
 import httpx
-from backend.config import settings
+
+try:
+    from backend.config import settings
+except ImportError:
+    from config import settings
 
 class GeminiClient:
     def __init__(self):

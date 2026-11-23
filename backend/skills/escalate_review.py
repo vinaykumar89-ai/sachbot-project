@@ -1,7 +1,10 @@
 import random
 from datetime import datetime, timezone
 from typing import Dict, Any, Tuple
-from backend.skills.base import BaseSkill, SkillExecutionResult, SkillCard
+try:
+    from backend.skills.base import BaseSkill, SkillExecutionResult, SkillCard
+except ImportError:
+    from skills.base import BaseSkill, SkillExecutionResult, SkillCard
 
 class EscalateReviewSkill(BaseSkill):
     name = "escalate_review"

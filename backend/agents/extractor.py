@@ -2,9 +2,15 @@ import re
 import json
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
-from backend.services.gemini_client import gemini_client
-from backend.services.live_grounding import normalize_query_entities
-from backend.config import settings
+
+try:
+    from backend.services.gemini_client import gemini_client
+    from backend.services.live_grounding import normalize_query_entities
+    from backend.config import settings
+except ImportError:
+    from services.gemini_client import gemini_client
+    from services.live_grounding import normalize_query_entities
+    from config import settings
 
 class AtomicClaim(BaseModel):
     id: int

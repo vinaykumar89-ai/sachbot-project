@@ -1,7 +1,11 @@
 import re
 from typing import Dict, Any, Tuple, Optional
-from backend.skills.base import BaseSkill, SkillExecutionResult, SkillCard
-from backend.services.domain_checker import check_domain_reputation, extract_domain
+try:
+    from backend.skills.base import BaseSkill, SkillExecutionResult, SkillCard
+    from backend.services.domain_checker import check_domain_reputation, extract_domain
+except ImportError:
+    from skills.base import BaseSkill, SkillExecutionResult, SkillCard
+    from services.domain_checker import check_domain_reputation, extract_domain
 
 URL_EXTRACT_REGEX = r'(https?://[^\s]+|[a-zA-Z0-9-]+\.(?:com|org|net|in|gov|io|co|xyz|news|ai|info|site|tv)[^\s]*)'
 

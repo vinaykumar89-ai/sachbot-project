@@ -11,8 +11,12 @@ except ImportError:
     BeautifulSoup = None
     HAS_BS4 = False
 
-from backend.services.gemini_client import gemini_client
-from backend.config import settings
+try:
+    from backend.services.gemini_client import gemini_client
+    from backend.config import settings
+except ImportError:
+    from services.gemini_client import gemini_client
+    from config import settings
 
 # Common typo and alias dictionary for instant entity resolution
 COMMON_ENTITY_TYPOS = {

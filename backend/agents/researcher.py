@@ -3,10 +3,17 @@ import json
 import httpx
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
-from backend.agents.extractor import AtomicClaim
-from backend.services.gemini_client import gemini_client
-from backend.services.live_grounding import execute_universal_live_grounding
-from backend.config import settings
+
+try:
+    from backend.agents.extractor import AtomicClaim
+    from backend.services.gemini_client import gemini_client
+    from backend.services.live_grounding import execute_universal_live_grounding
+    from backend.config import settings
+except ImportError:
+    from agents.extractor import AtomicClaim
+    from services.gemini_client import gemini_client
+    from services.live_grounding import execute_universal_live_grounding
+    from config import settings
 
 class EvidenceSource(BaseModel):
     title: str

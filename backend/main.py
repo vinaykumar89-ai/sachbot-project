@@ -1,29 +1,56 @@
+import sys
 import os
 import uuid
 import shutil
 import time
 from typing import Optional, List
+
+# Ensure current and parent directory are in Python search path for dual-mode execution
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+_parent_dir = os.path.dirname(_current_dir)
+if _current_dir not in sys.path:
+    sys.path.insert(0, _current_dir)
+if _parent_dir not in sys.path:
+    sys.path.insert(0, _parent_dir)
+
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from backend.config import settings
-from backend.services.cache_db import (
-    generate_query_hash,
-    get_cached_verification,
-    save_verification,
-    get_recent_history,
-    get_verification_by_id,
-    get_cache_stats
-)
-from backend.agents.normalizer import run_stage_1_normalizer
-from backend.agents.extractor import run_stage_2_extractor
-from backend.agents.researcher import run_stage_3_researcher
-from backend.agents.adjudicator import run_stage_4_adjudicator
-from backend.skills import skill_registry
-from backend.services.session_store import session_store
+try:
+    from backend.config import settings
+    from backend.services.cache_db import (
+        generate_query_hash,
+        get_cached_verification,
+        save_verification,
+        get_recent_history,
+        get_verification_by_id,
+        get_cache_stats
+    )
+    from backend.agents.normalizer import run_stage_1_normalizer
+    from backend.agents.extractor import run_stage_2_extractor
+    from backend.agents.researcher import run_stage_3_researcher
+    from backend.agents.adjudicator import run_stage_4_adjudicator
+    from backend.skills import skill_registry
+    from backend.services.session_store import session_store
+except ImportError:
+    from config import settings
+    from services.cache_db import (
+        generate_query_hash,
+        get_cached_verification,
+        save_verification,
+        get_recent_history,
+        get_verification_by_id,
+        get_cache_stats
+    )
+    from agents.normalizer import run_stage_1_normalizer
+    from agents.extractor import run_stage_2_extractor
+    from agents.researcher import run_stage_3_researcher
+    from agents.adjudicator import run_stage_4_adjudicator
+    from skills import skill_registry
+    from services.session_store import session_store
 
 app = FastAPI(
     title="Sachbot Fact-Checking API",
