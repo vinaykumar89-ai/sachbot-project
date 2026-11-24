@@ -114,6 +114,9 @@ class InMemoryTTLCache:
         if datetime.now(timezone.utc) - created > self.ttl:
             self._cache.pop(query_hash, None)
             return None
+        # Invalidate low-confidence or unverified cached responses to force fresh live searches
+        if str(entry.get("overall_verdict", "")).strip().startswith("UNVERIFIED") or float(entry.get("confidence_score", 0)) <= 65.0:
+            return None
         res = dict(entry)
         res.pop("_created_dt", None)
         res["is_cached"] = True
@@ -211,8 +214,8 @@ def get_cached_verification(query_hash: str) -> Optional[Dict[str, Any]]:
                 .first()
             )
             if record:
-                # Bypass cache if previous record was UNVERIFIED or failed to ground
-                if str(record.overall_verdict).strip().startswith("UNVERIFIED"):
+                # Bypass cache if previous record was UNVERIFIED, low-confidence, or failed to ground
+                if str(record.overall_verdict).strip().startswith("UNVERIFIED") or float(record.confidence_score or 0) <= 65.0:
                     return None
 
                 # Verify that the record contains at least one real source citation

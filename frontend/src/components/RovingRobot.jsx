@@ -105,8 +105,8 @@ export default function RovingRobot({
 
   return (
     <div
-      className={`fixed z-40 transition-all duration-300 select-none ${
-        isDocked ? 'bottom-5 right-5' : 'bottom-4'
+      className={`fixed z-30 transition-all duration-300 select-none pointer-events-none sm:pointer-events-auto ${
+        isDocked ? 'bottom-5 right-5' : 'bottom-3 sm:bottom-4'
       }`}
       style={{
         left: isDocked ? 'auto' : `${position.x}px`,
@@ -117,7 +117,7 @@ export default function RovingRobot({
     >
       {/* Speech Bubble */}
       {showSpeech && (
-        <div className="absolute -top-14 left-1/2 -translate-x-1/2 min-w-[210px] max-w-[260px] bg-slate-900/95 border border-cyan-400/40 rounded-xl px-3 py-2 text-[11px] font-medium text-cyan-200 shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-200 pointer-events-auto">
+        <div className="absolute -top-14 left-1/2 -translate-x-1/2 min-w-[190px] max-w-[240px] sm:max-w-[260px] bg-slate-900/95 border border-cyan-400/40 rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[11px] font-medium text-cyan-200 shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-200 pointer-events-none sm:pointer-events-auto">
           <div className="flex items-center justify-between gap-1 mb-0.5">
             <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1">
               <Radio className="w-2.5 h-2.5 animate-pulse" />
@@ -125,7 +125,7 @@ export default function RovingRobot({
             </span>
             <button
               onClick={() => setShowSpeech(false)}
-              className="text-slate-500 hover:text-slate-300 p-0.5"
+              className="text-slate-500 hover:text-slate-300 p-0.5 pointer-events-auto"
             >
               <X className="w-2.5 h-2.5" />
             </button>
@@ -139,7 +139,7 @@ export default function RovingRobot({
       {/* Roving Robot Body */}
       <div
         onClick={handleBotClick}
-        className="group relative cursor-pointer flex flex-col items-center"
+        className="group relative cursor-pointer flex flex-col items-center pointer-events-auto"
       >
         {/* Scanning Cone when loading */}
         {isLoading && (

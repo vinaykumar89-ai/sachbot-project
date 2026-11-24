@@ -112,7 +112,7 @@ export default function ExportTranscriptModal({ isOpen, onClose, sessionId = '',
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-4">
       {/* Dimmed backdrop */}
       <div 
         className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
@@ -120,10 +120,10 @@ export default function ExportTranscriptModal({ isOpen, onClose, sessionId = '',
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-3xl bg-[#090e1a] border border-cyan-500/30 rounded-2xl shadow-2xl text-slate-100 flex flex-col max-h-[90vh] z-10 font-sans backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-3xl bg-[#090e1a] border border-cyan-500/30 rounded-2xl shadow-2xl text-slate-100 flex flex-col max-h-[88dvh] z-10 font-sans backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
         
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-cyan-500/20 bg-[#0c1424] rounded-t-2xl flex items-center justify-between shrink-0">
+        <div className="p-3.5 sm:p-5 border-b border-cyan-500/20 bg-[#0c1424] rounded-t-2xl flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 flex items-center justify-center">
               <Download className="w-4 h-4 text-cyan-400" />

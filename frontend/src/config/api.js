@@ -9,12 +9,21 @@ const getApiBaseUrl = () => {
   if (envUrl) {
     return envUrl.replace(/\/+$/, '');
   }
+  // When running under Cloudflare Workers (*.workers.dev, *.pages.dev) or locally on Vite,
+  // relative URLs ("") allow worker.js or the Vite dev proxy to route /api cleanly to Render.
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname || '';
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
-    if (!isLocalhost) {
-      return 'https://sachbot-project.onrender.com';
+    if (
+      hostname.endsWith('.workers.dev') ||
+      hostname.endsWith('.pages.dev') ||
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '0.0.0.0'
+    ) {
+      return '';
     }
+    // Remote standalone origins fallback to Render backend
+    return 'https://sachbot-project.onrender.com';
   }
   return '';
 };

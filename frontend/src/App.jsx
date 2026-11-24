@@ -184,7 +184,16 @@ export default function App() {
       fetchHealthAndHistory();
     } catch (err) {
       console.error('Verification error:', err);
-      setErrorMsg(err.message || 'Fact-checking pipeline encountered an error. Please try again.');
+      let friendlyMsg = err.message || 'Fact-checking pipeline encountered an error. Please try again.';
+      if (
+        friendlyMsg.includes('Failed to fetch') ||
+        friendlyMsg.includes('NetworkError') ||
+        friendlyMsg.includes('gateway error') ||
+        friendlyMsg.includes('cold sleep')
+      ) {
+        friendlyMsg = 'Backend service connection paused or waking from free-tier sleep (~45s on Render). Please wait a moment and click Retry Verification.';
+      }
+      setErrorMsg(friendlyMsg);
     } finally {
       clearTimeout(stageTimer1);
       clearTimeout(stageTimer2);
@@ -250,7 +259,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen cyber-grid text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 relative">
+    <div className="min-h-[100dvh] overflow-x-hidden w-full cyber-grid text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 relative">
       {/* Interactive Click-Spawned Cute Mini-Robots Burst */}
       <ClickRobotBurst enabled={robotEnabled} />
 

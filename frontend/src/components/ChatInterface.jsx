@@ -178,7 +178,7 @@ export default function ChatInterface({
             }}
             placeholder="Ask Sachbot anything, or paste a viral claim/image to verify (Press Enter to ask)..."
             rows={2}
-            className="w-full bg-[#050811]/80 border border-slate-800/90 rounded-2xl p-4 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 resize-none transition-colors font-sans"
+            className="w-full bg-[#050811]/80 border border-slate-800/90 rounded-2xl p-3.5 sm:p-4 text-base sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 resize-none transition-colors font-sans"
           />
         </div>
 
@@ -192,13 +192,13 @@ export default function ChatInterface({
             value={inputUrl}
             onChange={(e) => setInputUrl(e.target.value)}
             placeholder="Or paste news article, YouTube Shorts, X/Twitter, or Instagram Reel URL..."
-            className="w-full bg-[#050811]/80 border border-slate-800/90 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 transition-colors font-mono"
+            className="w-full bg-[#050811]/80 border border-slate-800/90 rounded-xl pl-10 pr-4 py-2.5 text-base sm:text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 transition-colors font-mono"
           />
           {inputUrl && (
             <button
               type="button"
               onClick={() => setInputUrl('')}
-              className="absolute right-3 text-slate-500 hover:text-slate-300"
+              className="absolute right-3 p-1 text-slate-500 hover:text-slate-300"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -207,7 +207,7 @@ export default function ChatInterface({
 
         {/* Image Attachment & Cropped Preview Chip */}
         {imageUrl && (
-          <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-[#050811]/90 border border-cyan-500/40">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 rounded-xl bg-[#050811]/90 border border-cyan-500/40">
             <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-slate-900 border border-cyan-500/30 shrink-0">
               <img
                 src={croppedPreviewUrl || imageUrl}
@@ -221,35 +221,35 @@ export default function ChatInterface({
               )}
             </div>
 
-            <div className="space-y-1 flex-1 min-w-[200px]">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-200 truncate max-w-[220px]">
+            <div className="space-y-1 flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-slate-200 truncate max-w-[200px]">
                   {imageFile?.name || 'Attached Image'}
                 </span>
                 <span className="text-[10px] font-mono text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/30">
                   {croppedPreviewUrl ? 'Target Region Cropped' : 'Full Image'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-400 break-words">
                 {croppedPreviewUrl
                   ? 'Focused region selected for targeted OCR & reverse image lookup.'
                   : 'Full image will be OCR-scanned and checked for AI markers & EXIF.'}
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <button
                 type="button"
                 onClick={() => setIsCropModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-cyan-500/30 text-xs font-semibold text-cyan-300 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-cyan-500/30 text-xs font-semibold text-cyan-300 transition-colors min-h-[44px]"
               >
                 <Crop className="w-3.5 h-3.5" />
-                {croppedPreviewUrl ? 'Re-crop Region' : 'Crop Focus Region'}
+                <span>{croppedPreviewUrl ? 'Re-crop Region' : 'Crop Focus Region'}</span>
               </button>
               <button
                 type="button"
                 onClick={handleRemoveImage}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-900 transition-colors"
+                className="p-2.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-900 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 title="Remove image"
               >
                 <X className="w-4 h-4" />
@@ -259,8 +259,8 @@ export default function ChatInterface({
         )}
 
         {/* Toolbar & Bottom Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-cyan-500/10">
-          <div className="flex items-center gap-2.5 sm:gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-2 border-t border-cyan-500/10">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Hidden File Input */}
             <input
               ref={fileInputRef}
@@ -274,19 +274,19 @@ export default function ChatInterface({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#050811] hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 text-xs font-semibold text-slate-300 hover:text-cyan-200 transition-all shadow-sm"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-[#050811] hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 text-xs font-semibold text-slate-300 hover:text-cyan-200 transition-all shadow-sm min-h-[44px]"
             >
-              <ImageIcon className="w-4 h-4 text-cyan-400" />
-              <span>Attach Image / Screenshot</span>
+              <ImageIcon className="w-4 h-4 text-cyan-400 shrink-0" />
+              <span>Attach Image</span>
             </button>
 
             {/* Multilingual Selector */}
-            <div className="flex items-center gap-1.5 bg-[#050811] px-3 py-1.5 rounded-xl border border-slate-800 text-xs text-slate-300">
-              <Globe className="w-3.5 h-3.5 text-cyan-400" />
+            <div className="flex-1 sm:flex-none flex items-center gap-1.5 bg-[#050811] px-2.5 py-1.5 rounded-xl border border-slate-800 text-xs text-slate-300 min-h-[44px]">
+              <Globe className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
               <select
                 value={languagePref}
                 onChange={(e) => setLanguagePref(e.target.value)}
-                className="bg-transparent focus:outline-none text-xs font-medium text-slate-200 cursor-pointer font-sans"
+                className="bg-transparent focus:outline-none text-xs font-medium text-slate-200 cursor-pointer font-sans w-full"
               >
                 <option value="auto" className="bg-slate-900 text-slate-200">
                   Auto-Detect (Hinglish/Regional)
@@ -320,7 +320,7 @@ export default function ChatInterface({
           <button
             type="submit"
             disabled={!hasInput || isLoading}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition-all shadow-lg shadow-cyan-500/25 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none font-mono tracking-wider uppercase"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 transition-all shadow-lg shadow-cyan-500/25 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none font-mono tracking-wider uppercase min-h-[44px]"
           >
             <Send className="w-4 h-4" />
             <span>{isLoading ? 'Scanning...' : 'Verify Fact'}</span>

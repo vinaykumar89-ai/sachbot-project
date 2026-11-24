@@ -41,87 +41,48 @@ RULES:
 def fallback_claim_extraction(text: str) -> ExtractionResult:
     """
     Robust rule-based claim extraction when Gemini is not configured.
-    Detects known viral hoaxes and breaks sentences down into testable claims.
+    Normalizes entities and propositions dynamically without hardcoded topic rewrites.
     """
     lower = text.lower()
     claims: List[AtomicClaim] = []
     filtered: List[str] = []
 
-    # Known viral forward patterns
-    if "2000" in lower and any(k in lower for k in ["chip", "gps", "nano", "satellite"]):
-        claims.append(AtomicClaim(
-            id=1,
-            claim_text="The Reserve Bank of India (RBI) Rs 2000 currency note contains a Nano GPS Chip (NGC) tracked by satellites.",
-            claim_text_english="RBI 2000 rupee note nano GPS chip satellite tracking",
-            claim_type="technology_policy",
-            search_queries=[
-                "RBI 2000 note nano GPS chip fact check",
-                "Reserve Bank of India 2000 currency microchip official statement",
-                "Alt News Boom Live 2000 note GPS chip debunked"
-            ],
-            importance="high"
-        ))
-    elif "diwali" in lower and any(k in lower for k in ["nasa", "satellite", "space"]):
-        claims.append(AtomicClaim(
-            id=1,
-            claim_text="NASA released a satellite photograph showing India illuminated in brilliant colors on Diwali night.",
-            claim_text_english="NASA satellite image India Diwali night real or fake",
-            claim_type="scientific_media",
-            search_queries=[
-                "NASA satellite image India on Diwali night fact check",
-                "NASA Earth Observatory India population lights composite"
-            ],
-            importance="high"
-        ))
-    elif any(k in lower for k in ["unesco", "national anthem", "best"]):
-        claims.append(AtomicClaim(
-            id=1,
-            claim_text="UNESCO officially declared Jana Gana Mana as the best national anthem in the world.",
-            claim_text_english="UNESCO declares Jana Gana Mana best national anthem world",
-            claim_type="policy_award",
-            search_queries=[
-                "UNESCO best national anthem Jana Gana Mana fact check",
-                "UNESCO official statement Indian national anthem"
-            ],
-            importance="high"
-        ))
-    else:
-        # Use entity normalization and question intent formulation
-        norm = normalize_query_entities(text)
-        claim_assertion = norm.get("claim_assertion") or text.strip()
-        search_queries = norm.get("search_queries") or [f"{text[:60]} fact check", f"{text[:50]} official verification"]
-        
-        claims.append(AtomicClaim(
-            id=1,
-            claim_text=claim_assertion,
-            claim_text_english=claim_assertion,
-            claim_type=norm.get("intent_type", "factual_statement"),
-            search_queries=search_queries,
-            importance="high"
-        ))
+    # Dynamic extraction via entity normalization and question intent formulation
+    norm = normalize_query_entities(text)
+    claim_assertion = norm.get("claim_assertion") or text.strip()
+    search_queries = norm.get("search_queries") or [f"{text[:60]} fact check", f"{text[:50]} official verification"]
+    
+    claims.append(AtomicClaim(
+        id=1,
+        claim_text=claim_assertion,
+        claim_text_english=claim_assertion,
+        claim_type=norm.get("intent_type", "factual_statement"),
+        search_queries=search_queries,
+        importance="high"
+    ))
 
-        # Sentence splitting heuristics for multi-sentence inputs
-        sentences = [s.strip() for s in re.split(r"[.\n!?।]+", text) if len(s.strip()) > 15]
-        claim_id = 2
-        for s in sentences[:3]:
-            # Filter obvious questions or short exclamations or duplicate assertion
-            if any(q in s.lower() for q in ["what do you think", "share this", "plz forward", "wake up india"]):
-                filtered.append(s)
-                continue
-            if s.lower() in claim_assertion.lower() or claim_assertion.lower() in s.lower():
-                continue
-            claims.append(AtomicClaim(
-                id=claim_id,
-                claim_text=s,
-                claim_text_english=s,
-                claim_type="factual_statement",
-                search_queries=[
-                    f"{s[:60]} fact check",
-                    f"{s[:50]} official verification"
-                ],
-                importance="medium"
-            ))
-            claim_id += 1
+    # Sentence splitting heuristics for multi-sentence inputs
+    sentences = [s.strip() for s in re.split(r"[.\n!?।]+", text) if len(s.strip()) > 15]
+    claim_id = 2
+    for s in sentences[:3]:
+        # Filter obvious questions or short exclamations or duplicate assertion
+        if any(q in s.lower() for q in ["what do you think", "share this", "plz forward", "wake up india"]):
+            filtered.append(s)
+            continue
+        if s.lower() in claim_assertion.lower() or claim_assertion.lower() in s.lower():
+            continue
+        claims.append(AtomicClaim(
+            id=claim_id,
+            claim_text=s,
+            claim_text_english=s,
+            claim_type="factual_statement",
+            search_queries=[
+                f"{s[:60]} fact check",
+                f"{s[:50]} official verification"
+            ],
+            importance="medium"
+        ))
+        claim_id += 1
 
     return ExtractionResult(
         claims=claims or [
