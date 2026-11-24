@@ -723,7 +723,7 @@ def execute_universal_live_grounding(raw_query: str) -> Dict[str, Any]:
             f"{direct_answer}\n\n"
             f"• Evidence Summary: Certified fact-checkers and primary records have refuted the assertion '{norm['claim_assertion']}'.\n"
             f"• Verified Findings: {top_debunk_snip}\n"
-            f"• Primary Source: {top_debunk.get('publisher', 'Fact-Check Bureau')} ({top_debunk.get('url', '')})"
+            f"• Primary Source: {top_debunk.get('publisher', 'Fact-Check Bureau')} — {top_debunk.get('title', 'Fact Check Report')}"
         )
         actual_fact = f"The claim '{norm['claim_assertion']}' is factually unfounded and directly contradicted by verified records: {top_debunk_snip[:250]}."
         viewer_correction = {
@@ -749,7 +749,7 @@ def execute_universal_live_grounding(raw_query: str) -> Dict[str, Any]:
             f"{direct_answer}\n\n"
             f"• Verified Event Details: {clean_top_snippet or top_title}\n"
             f"• Corroboration: Reported and confirmed across multiple accredited news and primary organizations including {publishers_str}.\n"
-            f"• Primary Source: {top_source.get('title', '')} ({top_source.get('url', '')})"
+            f"• Primary Source: {top_source.get('publisher', 'Accredited News Wire')} — {top_source.get('title', '')}"
         )
         actual_fact = f"Verified press and primary records confirm: {clean_top_snippet[:280] or top_title}."
         viewer_correction = {
@@ -767,7 +767,7 @@ def execute_universal_live_grounding(raw_query: str) -> Dict[str, Any]:
         summary_explanation = (
             f"{direct_answer}\n\n"
             f"• Verified Background: {wiki_intel['extract'][:450]}...\n"
-            f"• Reference: {wiki_intel.get('title')} ({wiki_intel.get('url')})"
+            f"• Primary Record: {wiki_intel.get('title', 'Encyclopedic Record')}"
         )
         actual_fact = f"Official records confirm: {wiki_intel['first_sentence']}"
         viewer_correction = {
@@ -791,7 +791,7 @@ def execute_universal_live_grounding(raw_query: str) -> Dict[str, Any]:
             summary_explanation = (
                 f"{direct_answer}\n\n"
                 f"• Retrieved Live Evidence: Corroborated with {len(all_sources)} live web sources including {all_sources[0].get('publisher', 'Web Source')}.\n"
-                f"• Source Link: {all_sources[0].get('url', '')}"
+                f"• Primary Source: {all_sources[0].get('publisher', 'Accredited Wire')} — {all_sources[0].get('title', '')}"
             )
             actual_fact = f"Evidence from live web retrieval: {top_snip[:250]}."
             viewer_correction = {

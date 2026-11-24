@@ -62,11 +62,28 @@ export default function App() {
   // Last submitted query data for live re-verification & retry
   const [lastQueryData, setLastQueryData] = useState(null);
   const messagesEndRef = useRef(null);
+  const latestAnswerRef = useRef(null);
+  const shouldAutoScrollRef = useRef(false);
 
-  // Auto-scroll chat feed to bottom on new messages
+  // Auto-scroll chat feed to show user input & progress while pipeline is loading
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
+    if (isLoading) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isLoading]);
+
+  // Smoothly auto-scroll directly to the newly generated answer when the assistant reply arrives
+  useEffect(() => {
+    if (!isLoading && shouldAutoScrollRef.current) {
+      shouldAutoScrollRef.current = false;
+      const timer = setTimeout(() => {
+        if (latestAnswerRef.current) {
+          latestAnswerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 120);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, messages]);
 
   // Fetch health check and recent history on mount
   const fetchHealthAndHistory = async () => {
@@ -107,6 +124,7 @@ export default function App() {
     setIsLoading(true);
     setErrorMsg(null);
     setLastQueryData(queryData);
+    shouldAutoScrollRef.current = true;
     if (forceRefresh) {
       setIsReverifying(true);
     }
@@ -284,21 +302,21 @@ export default function App() {
       />
 
       {/* Main Conversational Workspace */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 relative z-10 flex flex-col">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-3 sm:px-6 py-6 space-y-6 relative z-10 flex flex-col overflow-x-hidden">
         {/* If no messages yet: Welcome Hero */}
         {messages.length === 0 && (
-          <section className="text-center max-w-3xl mx-auto space-y-3 py-6 animate-in fade-in duration-300">
+          <section className="text-center max-w-3xl mx-auto space-y-3 py-6 animate-in fade-in duration-300 w-full min-w-0">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs font-mono tracking-wide shadow-sm">
               <Radio className="w-3.5 h-3.5 animate-pulse text-cyan-400" />
               <span>AI_FORENSIC_RADAR // MULTIMODAL_CONVERSATIONAL_AGENT</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white [overflow-wrap:anywhere] break-words">
               Investigate & Adjudicate{' '}
               <span className="bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
                 Viral Claims & Media
               </span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-2xl mx-auto font-sans">
+            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-2xl mx-auto font-sans [overflow-wrap:anywhere] break-words">
               Ask questions directly by texting like in Gemini or ChatGPT, or upload screenshots to fetch text, inspect origins, and verify empirical ground truth.
             </p>
           </section>
@@ -306,21 +324,21 @@ export default function App() {
 
         {/* Conversation Stream Header (when active) */}
         {messages.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-[#070D1A]/80 border border-cyan-500/20 text-xs backdrop-blur-md">
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="font-mono text-cyan-300 font-bold uppercase tracking-wide">
+          <div className="flex items-center justify-between px-3.5 sm:px-4 py-2.5 rounded-2xl bg-[#070D1A]/80 border border-cyan-500/20 text-xs backdrop-blur-md w-full min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="font-mono text-cyan-300 font-bold uppercase tracking-wide truncate">
                 ACTIVE_INVESTIGATION_THREAD
               </span>
-              <span className="text-slate-600">{"/"}</span>
-              <span className="text-slate-400 font-mono">
+              <span className="text-slate-600 shrink-0">{"/"}</span>
+              <span className="text-slate-400 font-mono shrink-0">
                 {messages.length} TURNS
               </span>
             </div>
 
             <button
               onClick={handleNewChat}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all font-mono text-[11px]"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all font-mono text-[11px] shrink-0"
               title="Start a fresh investigation session"
             >
               <Plus className="w-3.5 h-3.5 text-cyan-400" />
@@ -330,94 +348,100 @@ export default function App() {
         )}
 
         {/* Conversational Message Stream */}
-        {messages.length > 0 && (
-          <div className="space-y-6 flex-1">
-            {messages.map((msg) => (
-              <div key={msg.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                {/* User Turn */}
-                {msg.role === 'user' && (
-                  <div className="flex justify-end gap-3 max-w-3xl ml-auto">
-                    <div className="space-y-2 max-w-2xl">
-                      <div className="p-4 sm:p-5 rounded-3xl rounded-tr-sm bg-gradient-to-r from-slate-900 to-cyan-950/40 border border-cyan-500/30 text-slate-100 text-sm shadow-xl space-y-2">
-                        {msg.text && (
-                          <p className="leading-relaxed whitespace-pre-wrap font-sans">
-                            {msg.text}
-                          </p>
-                        )}
+        {messages.length > 0 && (() => {
+          const lastAssistantIndex = messages.map((m) => m.role).lastIndexOf('assistant');
+          return (
+            <div className="space-y-6 flex-1 w-full min-w-0 max-w-full">
+              {messages.map((msg, idx) => (
+                <div key={msg.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300 w-full min-w-0 max-w-full">
+                  {/* User Turn */}
+                  {msg.role === 'user' && (
+                    <div className="flex justify-end gap-2.5 sm:gap-3 max-w-3xl ml-auto w-full min-w-0">
+                      <div className="space-y-2 max-w-2xl min-w-0">
+                        <div className="p-4 sm:p-5 rounded-3xl rounded-tr-sm bg-gradient-to-r from-slate-900 to-cyan-950/40 border border-cyan-500/30 text-slate-100 text-sm shadow-xl space-y-2 [overflow-wrap:anywhere] break-words min-w-0 max-w-full">
+                          {msg.text && (
+                            <p className="leading-relaxed whitespace-pre-wrap font-sans [overflow-wrap:anywhere] break-words min-w-0 max-w-full">
+                              {msg.text}
+                            </p>
+                          )}
 
-                        {/* Uploaded Image Thumbnail */}
-                        {msg.imageUrl && (
-                          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-950/80 border border-cyan-500/30">
-                            <img
-                              src={msg.imageUrl}
-                              alt="User uploaded attachment"
-                              className="w-12 h-12 object-cover rounded-lg border border-slate-800"
-                            />
-                            <div className="text-[11px] font-mono text-slate-300 truncate">
-                              <span className="text-cyan-400 font-bold block">ATTACHED_MEDIA</span>
-                              <span className="truncate">{msg.imageName || 'Attached Media'}</span>
+                          {/* Uploaded Image Thumbnail */}
+                          {msg.imageUrl && (
+                            <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-950/80 border border-cyan-500/30 min-w-0 max-w-full">
+                              <img
+                                src={msg.imageUrl}
+                                alt="User uploaded attachment"
+                                className="w-12 h-12 object-cover rounded-lg border border-slate-800 shrink-0"
+                              />
+                              <div className="text-[11px] font-mono text-slate-300 truncate min-w-0">
+                                <span className="text-cyan-400 font-bold block">ATTACHED_MEDIA</span>
+                                <span className="truncate block">{msg.imageName || 'Attached Media'}</span>
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
 
-                        {/* Attached URL */}
-                        {msg.url && (
-                          <div className="flex items-center gap-1.5 text-xs text-cyan-300 font-mono truncate">
-                            <ExternalLink className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                            <a href={msg.url} target="_blank" rel="noopener noreferrer" className="underline truncate">
-                              {msg.url}
-                            </a>
-                          </div>
-                        )}
+                          {/* Attached URL */}
+                          {msg.url && (
+                            <div className="flex items-center gap-1.5 text-xs text-cyan-300 font-mono truncate min-w-0 max-w-full">
+                              <ExternalLink className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                              <a href={msg.url} target="_blank" rel="noopener noreferrer" className="underline truncate break-all">
+                                {msg.url}
+                              </a>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="text-right text-[10px] font-mono text-slate-500 pr-2">
+                          INVESTIGATOR • {msg.timestamp}
+                        </div>
                       </div>
 
-                      <div className="text-right text-[10px] font-mono text-slate-500 pr-2">
-                        INVESTIGATOR • {msg.timestamp}
+                      <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400 shrink-0 shadow-md">
+                        <User className="w-4 h-4" />
                       </div>
                     </div>
+                  )}
 
-                    <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400 shrink-0 shadow-md">
-                      <User className="w-4 h-4" />
-                    </div>
-                  </div>
-                )}
+                  {/* Assistant Turn */}
+                  {msg.role === 'assistant' && msg.report && (
+                    <div
+                      ref={idx === lastAssistantIndex ? latestAnswerRef : null}
+                      className="flex items-start gap-2.5 sm:gap-3.5 w-full min-w-0 max-w-full scroll-mt-20 sm:scroll-mt-24"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 shrink-0 shadow-md mt-1">
+                        <Bot className="w-4 h-4" />
+                      </div>
 
-                {/* Assistant Turn */}
-                {msg.role === 'assistant' && msg.report && (
-                  <div className="flex items-start gap-3 w-full">
-                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 shrink-0 shadow-md mt-1">
-                      <Bot className="w-4 h-4" />
-                    </div>
+                      <div className="flex-1 min-w-0 max-w-full space-y-4">
+                        {/* Verdict Card with Fetched Data, Provenance Dossier, The Actual Fact, and Cognitive Correction */}
+                        <VerdictCard
+                          report={msg.report}
+                          onShareReceipt={() => {
+                            setActiveReport(msg.report);
+                            setIsReceiptModalOpen(true);
+                          }}
+                          onReverifyLive={handleReverifyLive}
+                          isReverifying={isReverifying}
+                          onOpenAuditLog={() => {
+                            setActiveReport(msg.report);
+                            setActiveAuditLog(msg.report.audit_log || []);
+                            setIsAuditDrawerOpen(true);
+                          }}
+                          onQuickReplySelect={handleQuickReplySelect}
+                          onCardAction={handleCardAction}
+                        />
 
-                    <div className="flex-1 space-y-4">
-                      {/* Verdict Card with Fetched Data, Provenance Dossier, The Actual Fact, and Cognitive Correction */}
-                      <VerdictCard
-                        report={msg.report}
-                        onShareReceipt={() => {
-                          setActiveReport(msg.report);
-                          setIsReceiptModalOpen(true);
-                        }}
-                        onReverifyLive={handleReverifyLive}
-                        isReverifying={isReverifying}
-                        onOpenAuditLog={() => {
-                          setActiveReport(msg.report);
-                          setActiveAuditLog(msg.report.audit_log || []);
-                          setIsAuditDrawerOpen(true);
-                        }}
-                        onQuickReplySelect={handleQuickReplySelect}
-                        onCardAction={handleCardAction}
-                      />
-
-                      <div className="text-[10px] font-mono text-slate-500 pl-2">
-                        SACHBOT_VERIFIER • {msg.timestamp}
+                        <div className="text-[10px] font-mono text-slate-500 pl-2">
+                          SACHBOT_VERIFIER • {msg.timestamp}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Live Autonomous Pipeline Progress Indicator */}
         {isLoading && (

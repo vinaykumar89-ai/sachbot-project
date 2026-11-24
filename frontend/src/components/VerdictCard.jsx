@@ -35,6 +35,57 @@ import SkillBadge from './SkillBadge.jsx';
 import QuickReplies from './QuickReplies.jsx';
 import RichActionCard from './RichActionCard.jsx';
 
+// Utility to safely render text with clickable URL links and prevent any horizontal blowout
+const renderFormattedTextWithLinks = (text) => {
+  if (!text) return null;
+  const lines = text.split('\n');
+  const urlRegex = /(https?:\/\/[^\s<>)"]+)/g;
+
+  return lines.map((line, lIdx) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      return <div key={lIdx} className="h-1.5" />;
+    }
+
+    const parts = line.split(urlRegex);
+    return (
+      <p
+        key={lIdx}
+        className="leading-relaxed [overflow-wrap:anywhere] break-words min-w-0 max-w-full my-1 text-slate-200"
+      >
+        {parts.map((part, pIdx) => {
+          if (/^https?:\/\//.test(part)) {
+            let label = 'Source Link';
+            try {
+              const u = new URL(part);
+              label = u.hostname.replace(/^www\./, '');
+              if (u.pathname && u.pathname.length > 1) {
+                const seg = u.pathname.split('/').filter(Boolean)[0];
+                if (seg) label += `/${seg.slice(0, 15)}`;
+              }
+            } catch (_) {
+              label = part.slice(0, 24) + '...';
+            }
+            return (
+              <a
+                key={pIdx}
+                href={part}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-300 underline underline-offset-2 break-all [overflow-wrap:anywhere] font-mono text-xs mx-1 px-1.5 py-0.5 rounded bg-cyan-950/50 border border-cyan-500/30 shadow-sm align-middle"
+              >
+                <span>{label}</span>
+                <ExternalLink className="w-3 h-3 shrink-0" />
+              </a>
+            );
+          }
+          return <span key={pIdx}>{part}</span>;
+        })}
+      </p>
+    );
+  });
+};
+
 export default function VerdictCard({
   report,
   onShareReceipt,
@@ -211,15 +262,15 @@ export default function VerdictCard({
 
       {/* Main Verdict Card */}
       <div
-        className={`hud-card rounded-3xl border ${vConfig.borderColor} bg-gradient-to-b ${vConfig.bgGradient} p-6 sm:p-8 shadow-2xl relative overflow-hidden ring-1 ${vConfig.ringColor}`}
+        className={`hud-card rounded-3xl border ${vConfig.borderColor} bg-gradient-to-b ${vConfig.bgGradient} p-4 sm:p-7 shadow-2xl relative overflow-hidden ring-1 ${vConfig.ringColor} w-full min-w-0 max-w-full`}
       >
         {/* Glow ambient background effect */}
         <div className="absolute -right-24 -top-24 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
 
         {/* Triggered Skills Pill Badges */}
         {triggered_skills && triggered_skills.length > 0 && (
-          <div className="relative z-10 flex flex-wrap items-center gap-2 mb-4 pb-3 border-b border-cyan-500/15">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 flex items-center gap-1">
+          <div className="relative z-10 flex flex-wrap items-center gap-2 mb-4 pb-3 border-b border-cyan-500/15 min-w-0 max-w-full">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 flex items-center gap-1 shrink-0">
               <Zap className="w-3 h-3" />
               <span>SKILLS:</span>
             </span>
@@ -229,32 +280,32 @@ export default function VerdictCard({
           </div>
         )}
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-6 pb-6 border-b border-cyan-500/20">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-4 sm:gap-6 pb-6 border-b border-cyan-500/20 min-w-0 max-w-full">
           {/* Verdict Title & Badge */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold tracking-wider uppercase text-cyan-400">
+          <div className="space-y-3 min-w-0 max-w-full">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xs font-mono font-bold tracking-wider uppercase text-cyan-400 truncate">
                 OFFICIAL_ADJUDICATION_TELEMETRY
               </span>
-              <span className="text-slate-600">•</span>
-              <span className="text-xs font-mono text-slate-300">
+              <span className="text-slate-600 shrink-0">•</span>
+              <span className="text-xs font-mono text-slate-300 shrink-0">
                 LANG::{detected_language.toUpperCase()}
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 min-w-0">
               <div
-                className={`flex items-center gap-2.5 px-4.5 py-2.5 rounded-xl font-black text-sm sm:text-base tracking-wide border shadow-xl ${vConfig.badgeBg}`}
+                className={`flex items-center gap-2.5 px-3.5 sm:px-4.5 py-2.5 rounded-xl font-black text-sm sm:text-base tracking-wide border shadow-xl ${vConfig.badgeBg}`}
               >
-                <VerdictIcon className="w-5 h-5 stroke-[2.5]" />
+                <VerdictIcon className="w-5 h-5 stroke-[2.5] shrink-0" />
                 <span className="font-mono">{vConfig.label}</span>
               </div>
             </div>
           </div>
 
           {/* Confidence Score Meter */}
-          <div className="flex items-center gap-4 bg-[#050811]/90 p-3.5 rounded-2xl border border-cyan-500/20 shrink-0">
-            <div className="flex flex-col items-end">
+          <div className="flex items-center justify-between sm:justify-start gap-4 bg-[#050811]/90 p-3 sm:p-3.5 rounded-2xl border border-cyan-500/20 shrink-0 w-full md:w-auto">
+            <div className="flex flex-col items-start sm:items-end">
               <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-wider">
                 CONFIDENCE_METER
               </span>
@@ -264,7 +315,7 @@ export default function VerdictCard({
                 </span>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-full bg-slate-900 border-2 border-cyan-500/30 flex items-center justify-center relative">
+            <div className="w-12 h-12 rounded-full bg-slate-900 border-2 border-cyan-500/30 flex items-center justify-center relative shrink-0">
               <div
                 className={`w-9 h-9 rounded-full flex items-center justify-center font-mono font-bold text-xs ${vConfig.accentColor} bg-[#050811]`}
               >
@@ -275,83 +326,83 @@ export default function VerdictCard({
         </div>
 
         {/* Plain-Language Explanation with Direct Answer Callout */}
-        <div className="relative z-10 py-6 border-b border-slate-800/80">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 font-mono">
-            <FileText className="w-4 h-4 text-cyan-400" />
-            Investigative Finding & Evidence Summary
+        <div className="relative z-10 py-5 sm:py-6 border-b border-slate-800/80 min-w-0 max-w-full">
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5 font-mono">
+            <FileText className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span>Investigative Finding & Evidence Summary</span>
           </h4>
           {summary_explanation.includes('\n\n') ? (
-            <div className="space-y-3">
-              <div className="p-3.5 rounded-xl bg-cyan-950/30 border-l-4 border-cyan-400 text-slate-100 text-sm sm:text-base font-medium leading-relaxed">
+            <div className="space-y-3 min-w-0 max-w-full">
+              <div className="p-3.5 sm:p-4 rounded-xl bg-cyan-950/30 border-l-4 border-cyan-400 text-slate-100 text-sm sm:text-base font-medium leading-relaxed [overflow-wrap:anywhere] break-words min-w-0 max-w-full">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 block mb-1 font-bold">
                   DIRECT_ANSWER // GROUND_TRUTH
                 </span>
-                {summary_explanation.split('\n\n')[0]}
+                {renderFormattedTextWithLinks(summary_explanation.split('\n\n')[0])}
               </div>
-              <p className="text-slate-200 text-sm sm:text-base leading-relaxed font-normal whitespace-pre-line">
-                {summary_explanation.split('\n\n').slice(1).join('\n\n')}
-              </p>
+              <div className="text-slate-200 text-sm sm:text-base leading-relaxed font-normal min-w-0 max-w-full space-y-1">
+                {renderFormattedTextWithLinks(summary_explanation.split('\n\n').slice(1).join('\n\n'))}
+              </div>
             </div>
           ) : (
-            <p className="text-slate-100 text-sm sm:text-base leading-relaxed font-normal whitespace-pre-line">
-              {summary_explanation}
-            </p>
+            <div className="text-slate-100 text-sm sm:text-base leading-relaxed font-normal min-w-0 max-w-full">
+              {renderFormattedTextWithLinks(summary_explanation)}
+            </div>
           )}
         </div>
 
         {/* Fetched Image Data // Visual Intelligence Panel */}
         {realFetchedImageData && (realFetchedImageData.has_image_data || realFetchedImageData.extracted_text || realFetchedImageData.full_ocr) && (
-          <div className="relative z-10 my-5 p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-cyan-950/40 via-slate-900/90 to-blue-950/30 border border-cyan-500/40 shadow-xl shadow-cyan-950/30 backdrop-blur-md overflow-hidden">
+          <div className="relative z-10 my-5 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-cyan-950/40 via-slate-900/90 to-blue-950/30 border border-cyan-500/40 shadow-xl shadow-cyan-950/30 backdrop-blur-md overflow-hidden min-w-0 max-w-full">
             <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-cyan-500/20">
-              <div className="flex items-center gap-2.5">
+            <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-cyan-500/20 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-7 h-7 rounded-lg bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400 shrink-0">
                   <ScanLine className="w-4 h-4" />
                 </div>
-                <div>
-                  <div className="text-[10px] font-mono font-bold tracking-widest text-cyan-400 uppercase">
+                <div className="min-w-0">
+                  <div className="text-[10px] font-mono font-bold tracking-widest text-cyan-400 uppercase truncate">
                     VISUAL_INTELLIGENCE // FETCHED_IMAGE_DATA
                   </div>
-                  <h4 className="text-sm font-bold text-white tracking-wide">
+                  <h4 className="text-sm font-bold text-white tracking-wide truncate">
                     Data Fetched from Uploaded Image
                   </h4>
                 </div>
               </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shrink-0">
                 OCR_EXTRACTED
               </span>
             </div>
 
-            <div className="space-y-3 text-xs sm:text-sm">
+            <div className="space-y-3 text-xs sm:text-sm min-w-0 max-w-full">
               {(realFetchedImageData.extracted_text || realFetchedImageData.full_ocr) && (
-                <div className="p-3.5 rounded-xl bg-slate-950/70 border border-cyan-500/20">
+                <div className="p-3.5 rounded-xl bg-slate-950/70 border border-cyan-500/20 min-w-0 max-w-full">
                   <span className="text-[10px] font-mono font-bold uppercase text-cyan-400 block mb-1">
                     Detected Text / Headline in Image (OCR):
                   </span>
-                  <p className="text-slate-100 font-mono text-xs sm:text-[13px] leading-relaxed">
-                    "{realFetchedImageData.extracted_text || realFetchedImageData.full_ocr}"
-                  </p>
+                  <div className="text-slate-100 font-mono text-xs sm:text-[13px] leading-relaxed [overflow-wrap:anywhere] break-words min-w-0 max-w-full">
+                    {renderFormattedTextWithLinks(realFetchedImageData.extracted_text || realFetchedImageData.full_ocr)}
+                  </div>
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0 max-w-full">
                 {(realFetchedImageData.depicted_subject || realFetchedImageData.visual_description) && (
-                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 min-w-0 max-w-full">
                     <span className="text-[10px] font-mono text-slate-400 uppercase block mb-0.5">
                       Identified Subject:
                     </span>
-                    <span className="text-white font-semibold text-xs sm:text-sm">
+                    <span className="text-white font-semibold text-xs sm:text-sm [overflow-wrap:anywhere] break-words block">
                       {realFetchedImageData.depicted_subject || realFetchedImageData.visual_description}
                     </span>
                   </div>
                 )}
 
                 {(realFetchedImageData.watermark_or_source || realFetchedImageData.brand_or_watermark) && (
-                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 min-w-0 max-w-full">
                     <span className="text-[10px] font-mono text-slate-400 uppercase block mb-0.5">
                       Watermark / Source Attribution:
                     </span>
-                    <span className="text-cyan-300 font-mono text-xs sm:text-sm font-semibold">
+                    <span className="text-cyan-300 font-mono text-xs sm:text-sm font-semibold [overflow-wrap:anywhere] break-words block">
                       {realFetchedImageData.watermark_or_source || realFetchedImageData.brand_or_watermark}
                     </span>
                   </div>
@@ -359,11 +410,11 @@ export default function VerdictCard({
               </div>
 
               {realFetchedImageData.extracted_claim && (
-                <div className="p-2.5 rounded-xl bg-cyan-950/20 border border-cyan-500/20 flex items-center gap-2">
+                <div className="p-2.5 rounded-xl bg-cyan-950/20 border border-cyan-500/20 flex items-center gap-2 min-w-0 max-w-full">
                   <span className="text-[10px] font-mono text-cyan-400 uppercase shrink-0 font-bold">
                     Extracted Claim:
                   </span>
-                  <span className="text-slate-200 text-xs italic">
+                  <span className="text-slate-200 text-xs italic [overflow-wrap:anywhere] break-words min-w-0 flex-1">
                     {realFetchedImageData.extracted_claim}
                   </span>
                 </div>
@@ -374,69 +425,69 @@ export default function VerdictCard({
 
         {/* Image Origin & Provenance Dossier Panel */}
         {realImageOrigin && (realImageOrigin.has_origin_data || realImageOrigin.captured_date) && (
-          <div className="relative z-10 my-5 p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-slate-950/90 via-[#0B1323]/90 to-purple-950/20 border border-purple-500/35 shadow-xl shadow-purple-950/20 backdrop-blur-md overflow-hidden">
+          <div className="relative z-10 my-5 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-slate-950/90 via-[#0B1323]/90 to-purple-950/20 border border-purple-500/35 shadow-xl shadow-purple-950/20 backdrop-blur-md overflow-hidden min-w-0 max-w-full">
             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-purple-500/20">
-              <div className="flex items-center gap-2.5">
+            <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-purple-500/20 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-400 shrink-0">
                   <Camera className="w-4 h-4" />
                 </div>
-                <div>
-                  <div className="text-[10px] font-mono font-bold tracking-widest text-purple-400 uppercase">
+                <div className="min-w-0">
+                  <div className="text-[10px] font-mono font-bold tracking-widest text-purple-400 uppercase truncate">
                     IMAGE_PROVENANCE // METADATA_DOSSIER
                   </div>
-                  <h4 className="text-sm font-bold text-white tracking-wide">
+                  <h4 className="text-sm font-bold text-white tracking-wide truncate">
                     Image Origin, Date & Creator Details
                   </h4>
                 </div>
               </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30 shrink-0">
                 ORIGIN_AUDIT
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs min-w-0 max-w-full">
               {/* Date */}
-              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1">
+              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1 min-w-0 max-w-full">
                 <span className="text-[10px] font-mono text-purple-400 uppercase font-bold flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
+                  <Calendar className="w-3.5 h-3.5 shrink-0" />
                   <span>Captured / Creation Date:</span>
                 </span>
-                <p className="text-slate-100 font-medium text-xs sm:text-[13px]">
+                <p className="text-slate-100 font-medium text-xs sm:text-[13px] [overflow-wrap:anywhere] break-words">
                   {realImageOrigin.captured_date || 'Date stripped by social platform'}
                 </p>
               </div>
 
               {/* By Whom / Author */}
-              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1">
+              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1 min-w-0 max-w-full">
                 <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5" />
+                  <User className="w-3.5 h-3.5 shrink-0" />
                   <span>By Whom / Source:</span>
                 </span>
-                <p className="text-slate-100 font-medium text-xs sm:text-[13px]">
+                <p className="text-slate-100 font-medium text-xs sm:text-[13px] [overflow-wrap:anywhere] break-words">
                   {realImageOrigin.by_whom || 'Author metadata stripped by social media'}
                 </p>
               </div>
 
               {/* Camera / Device */}
-              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1">
+              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1 min-w-0 max-w-full">
                 <span className="text-[10px] font-mono text-amber-400 uppercase font-bold flex items-center gap-1.5">
-                  <Camera className="w-3.5 h-3.5" />
+                  <Camera className="w-3.5 h-3.5 shrink-0" />
                   <span>Camera / Device:</span>
                 </span>
-                <p className="text-slate-100 font-medium text-xs sm:text-[13px]">
+                <p className="text-slate-100 font-medium text-xs sm:text-[13px] [overflow-wrap:anywhere] break-words">
                   {realImageOrigin.camera_or_device || 'Web Encoded Media'}
                 </p>
               </div>
 
               {/* Location */}
               {realImageOrigin.location && (
-                <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1">
+                <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1 min-w-0 max-w-full">
                   <span className="text-[10px] font-mono text-emerald-400 uppercase font-bold flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5" />
+                    <MapPin className="w-3.5 h-3.5 shrink-0" />
                     <span>Location:</span>
                   </span>
-                  <p className="text-slate-100 font-medium text-xs sm:text-[13px]">
+                  <p className="text-slate-100 font-medium text-xs sm:text-[13px] [overflow-wrap:anywhere] break-words">
                     {realImageOrigin.location}
                   </p>
                 </div>
@@ -444,22 +495,22 @@ export default function VerdictCard({
 
               {/* Dimensions */}
               {realImageOrigin.dimensions && (
-                <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1">
+                <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1 min-w-0 max-w-full">
                   <span className="text-[10px] font-mono text-teal-400 uppercase font-bold">
                     Resolution & Specs:
                   </span>
-                  <p className="text-slate-100 font-mono text-xs">
+                  <p className="text-slate-100 font-mono text-xs [overflow-wrap:anywhere] break-words">
                     {realImageOrigin.dimensions}
                   </p>
                 </div>
               )}
 
               {/* Provenance Status */}
-              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1 sm:col-span-2 lg:col-span-1">
+              <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1 sm:col-span-2 lg:col-span-1 min-w-0 max-w-full">
                 <span className="text-[10px] font-mono text-blue-400 uppercase font-bold">
                   Platform Provenance Status:
                 </span>
-                <p className="text-slate-200 text-xs">
+                <p className="text-slate-200 text-xs [overflow-wrap:anywhere] break-words">
                   {realImageOrigin.provenance_integrity || 'Standard Social Compression'}
                 </p>
               </div>
@@ -469,106 +520,106 @@ export default function VerdictCard({
 
         {/* The Actual Fact // Ground Truth Reality Panel */}
         {realActualFact && (
-          <div className="relative z-10 my-5 p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-slate-900/90 to-cyan-950/30 border border-emerald-500/40 shadow-xl shadow-emerald-950/30 backdrop-blur-md overflow-hidden">
+          <div className="relative z-10 my-5 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-slate-900/90 to-cyan-950/30 border border-emerald-500/40 shadow-xl shadow-emerald-950/30 backdrop-blur-md overflow-hidden min-w-0 max-w-full">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-emerald-500/20">
-              <div className="flex items-center gap-2.5">
+            <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-emerald-500/20 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 shrink-0">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
-                <div>
-                  <div className="text-[10px] font-mono font-bold tracking-widest text-emerald-400 uppercase">
+                <div className="min-w-0">
+                  <div className="text-[10px] font-mono font-bold tracking-widest text-emerald-400 uppercase truncate">
                     GROUND_TRUTH_REALITY // EMPIRICAL_FACT
                   </div>
-                  <h4 className="text-sm font-bold text-white tracking-wide">
+                  <h4 className="text-sm font-bold text-white tracking-wide truncate">
                     The Actual Fact
                   </h4>
                 </div>
               </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shrink-0">
                 VERIFIED_RECORD
               </span>
             </div>
-            <p className="text-emerald-50 text-sm sm:text-base leading-relaxed font-medium">
-              {realActualFact}
-            </p>
+            <div className="text-emerald-50 text-sm sm:text-base leading-relaxed font-medium [overflow-wrap:anywhere] break-words min-w-0 max-w-full">
+              {renderFormattedTextWithLinks(realActualFact)}
+            </div>
           </div>
         )}
 
         {/* Viewer Cognitive Correction // Reality Check & Thought Calibration Panel */}
         {realViewerCorrection && (realViewerCorrection.misconception || realViewerCorrection.why_it_misleads || realViewerCorrection.corrected_perspective) && (
-          <div className="relative z-10 my-5 p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#120F24]/90 via-[#0B101E]/90 to-[#10192A]/90 border border-amber-500/35 shadow-2xl shadow-purple-950/20 backdrop-blur-md overflow-hidden">
+          <div className="relative z-10 my-5 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-[#120F24]/90 via-[#0B101E]/90 to-[#10192A]/90 border border-amber-500/35 shadow-2xl shadow-purple-950/20 backdrop-blur-md overflow-hidden min-w-0 max-w-full">
             <div className="absolute -top-12 -left-12 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="flex items-center justify-between gap-2 pb-3 mb-4 border-b border-amber-500/20">
-              <div className="flex items-center gap-2.5">
+            <div className="flex items-center justify-between gap-2 pb-3 mb-4 border-b border-amber-500/20 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 shrink-0">
                   <Brain className="w-4 h-4" />
                 </div>
-                <div>
-                  <div className="text-[10px] font-mono font-bold tracking-widest text-amber-400 uppercase">
+                <div className="min-w-0">
+                  <div className="text-[10px] font-mono font-bold tracking-widest text-amber-400 uppercase truncate">
                     COGNITIVE_CORRECTION // VIEWER_REALITY_CHECK
                   </div>
-                  <h4 className="text-sm font-bold text-white tracking-wide">
+                  <h4 className="text-sm font-bold text-white tracking-wide truncate">
                     Correcting Viewer Thoughts & Media Perception
                   </h4>
                 </div>
               </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
                 MEDIA_LITERACY
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm min-w-0 max-w-full">
               {/* Common Misconception */}
               {realViewerCorrection.misconception && (
-                <div className="p-3.5 rounded-xl bg-slate-950/70 border border-rose-500/25 space-y-1.5">
+                <div className="p-3.5 rounded-xl bg-slate-950/70 border border-rose-500/25 space-y-1.5 min-w-0 max-w-full">
                   <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[11px] font-bold uppercase tracking-wider">
-                    <Target className="w-3.5 h-3.5" />
+                    <Target className="w-3.5 h-3.5 shrink-0" />
                     <span>Common Misconception</span>
                   </div>
-                  <p className="text-slate-200 leading-relaxed text-xs sm:text-[13px]">
-                    {realViewerCorrection.misconception}
-                  </p>
+                  <div className="text-slate-200 leading-relaxed text-xs sm:text-[13px] [overflow-wrap:anywhere] break-words min-w-0 max-w-full">
+                    {renderFormattedTextWithLinks(realViewerCorrection.misconception)}
+                  </div>
                 </div>
               )}
 
               {/* Why This Misleads Viewers */}
               {realViewerCorrection.why_it_misleads && (
-                <div className="p-3.5 rounded-xl bg-slate-950/70 border border-amber-500/25 space-y-1.5">
+                <div className="p-3.5 rounded-xl bg-slate-950/70 border border-amber-500/25 space-y-1.5 min-w-0 max-w-full">
                   <div className="flex items-center gap-1.5 text-amber-400 font-mono text-[11px] font-bold uppercase tracking-wider">
-                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                     <span>Why This Misleads Viewers</span>
                   </div>
-                  <p className="text-slate-200 leading-relaxed text-xs sm:text-[13px]">
-                    {realViewerCorrection.why_it_misleads}
-                  </p>
+                  <div className="text-slate-200 leading-relaxed text-xs sm:text-[13px] [overflow-wrap:anywhere] break-words min-w-0 max-w-full">
+                    {renderFormattedTextWithLinks(realViewerCorrection.why_it_misleads)}
+                  </div>
                 </div>
               )}
 
               {/* Corrected Viewer Perspective */}
               {realViewerCorrection.corrected_perspective && (
-                <div className="p-3.5 rounded-xl bg-slate-950/70 border border-cyan-500/30 space-y-1.5 md:col-span-2">
+                <div className="p-3.5 rounded-xl bg-slate-950/70 border border-cyan-500/30 space-y-1.5 md:col-span-2 min-w-0 max-w-full">
                   <div className="flex items-center gap-1.5 text-cyan-400 font-mono text-[11px] font-bold uppercase tracking-wider">
-                    <Lightbulb className="w-3.5 h-3.5" />
+                    <Lightbulb className="w-3.5 h-3.5 shrink-0" />
                     <span>Corrected Viewer Perspective</span>
                   </div>
-                  <p className="text-cyan-50 font-medium leading-relaxed text-xs sm:text-[13px]">
-                    {realViewerCorrection.corrected_perspective}
-                  </p>
+                  <div className="text-cyan-50 font-medium leading-relaxed text-xs sm:text-[13px] [overflow-wrap:anywhere] break-words min-w-0 max-w-full">
+                    {renderFormattedTextWithLinks(realViewerCorrection.corrected_perspective)}
+                  </div>
                 </div>
               )}
 
               {/* Critical Thinking Rule */}
               {realViewerCorrection.critical_thinking_tip && (
-                <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 md:col-span-2 flex items-start gap-2.5">
+                <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 md:col-span-2 flex items-start gap-2.5 min-w-0 max-w-full">
                   <Compass className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <div className="space-y-0.5">
+                  <div className="space-y-0.5 min-w-0 max-w-full flex-1">
                     <span className="text-[10px] font-mono font-bold uppercase text-emerald-400 tracking-wider">
                       CRITICAL_THINKING_RULE
                     </span>
-                    <p className="text-emerald-100/90 text-xs sm:text-[13px] leading-relaxed">
-                      {realViewerCorrection.critical_thinking_tip}
-                    </p>
+                    <div className="text-emerald-100/90 text-xs sm:text-[13px] leading-relaxed [overflow-wrap:anywhere] break-words min-w-0 max-w-full">
+                      {renderFormattedTextWithLinks(realViewerCorrection.critical_thinking_tip)}
+                    </div>
                   </div>
                 </div>
               )}

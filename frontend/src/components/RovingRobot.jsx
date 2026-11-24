@@ -8,18 +8,18 @@ export default function RovingRobot({
   isTyping = false,
   onToggle,
 }) {
-  const [position, setPosition] = useState({ x: 40, y: 0 }); // Bottom offset
-  const [direction, setDirection] = useState(1); // 1 = moving right, -1 = moving left
-  const [isDocked, setIsDocked] = useState(false);
-  const [speechText, setSpeechText] = useState('Unit-07 online. Truth radar active.');
-  const [showSpeech, setShowSpeech] = useState(true);
-  const [isHovered, setIsHovered] = useState(false);
-  const [spinCount, setSpinCount] = useState(0);
-
+  const containerRef = useRef(null);
+  const posRef = useRef({ x: 40, dir: 1 });
   const animFrameRef = useRef(null);
   const speechTimeoutRef = useRef(null);
 
-  // Reaction to page events
+  const [isDocked, setIsDocked] = useState(false);
+  const [speechText, setSpeechText] = useState('Unit-07 online. Truth radar active.');
+  const [showSpeech, setShowSpeech] = useState(true);
+  const [facingDir, setFacingDir] = useState(1); // 1 = right, -1 = left
+  const [spinCount, setSpinCount] = useState(0);
+
+  // Dynamic speech reaction to pipeline events
   useEffect(() => {
     if (isLoading) {
       setSpeechText('Forensic sensors scanning... Ingesting live groundings!');
@@ -38,58 +38,63 @@ export default function RovingRobot({
         setSpeechText('Investigation compiled. Telemetry ready!');
       }
       setShowSpeech(true);
-      // Auto-hide speech bubble after 5s
       clearTimeout(speechTimeoutRef.current);
-      speechTimeoutRef.current = setTimeout(() => setShowSpeech(false), 5500);
+      speechTimeoutRef.current = setTimeout(() => setShowSpeech(false), 6000);
     } else if (isTyping) {
       setSpeechText('Tracking input assertions... Ready for deep search.');
       setShowSpeech(true);
     }
   }, [isLoading, verdictData, isTyping]);
 
-  // Smooth roving motion
+  // Smooth continuous 60fps roving motion using requestAnimationFrame + translate3d
+  // Does not freeze on mobile touch or loading, and does not trigger React re-renders every frame
   useEffect(() => {
-    if (!enabled || isDocked || isHovered || isLoading) return;
+    if (!enabled || isDocked) {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      return;
+    }
 
-    let currentX = position.x;
-    let currentDir = direction;
-    const speed = 0.65; // Pixels per frame
+    const speed = 0.7; // Pixels per frame (~42px/sec at 60fps)
 
-    const moveBot = () => {
-      const screenWidth = window.innerWidth;
-      const minX = 30;
-      const maxX = Math.max(minX + 100, screenWidth - 140);
+    const step = () => {
+      const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1000;
+      const minX = 16;
+      const maxX = Math.max(minX + 80, screenWidth - 110);
 
-      currentX += speed * currentDir;
+      posRef.current.x += speed * posRef.current.dir;
 
-      if (currentX >= maxX) {
-        currentX = maxX;
-        currentDir = -1;
-        setDirection(-1);
-      } else if (currentX <= minX) {
-        currentX = minX;
-        currentDir = 1;
-        setDirection(1);
+      if (posRef.current.x >= maxX) {
+        posRef.current.x = maxX;
+        posRef.current.dir = -1;
+        setFacingDir(-1);
+      } else if (posRef.current.x <= minX) {
+        posRef.current.x = minX;
+        posRef.current.dir = 1;
+        setFacingDir(1);
       }
 
-      setPosition((prev) => ({ ...prev, x: currentX }));
-      animFrameRef.current = requestAnimationFrame(moveBot);
+      if (containerRef.current) {
+        containerRef.current.style.transform = `translate3d(${posRef.current.x}px, 0, 0)`;
+      }
+
+      animFrameRef.current = requestAnimationFrame(step);
     };
 
-    animFrameRef.current = requestAnimationFrame(moveBot);
+    animFrameRef.current = requestAnimationFrame(step);
 
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [enabled, isDocked, isHovered, isLoading, direction]);
+  }, [enabled, isDocked]);
 
-  const handleBotClick = () => {
+  const handleBotClick = (e) => {
+    e.stopPropagation();
     setSpinCount((prev) => prev + 1);
     const quips = [
       'Unit-07 at your service! Zero hallucinations permitted.',
       'Scanning for digital artifacts & cheapfakes...',
       'Grounded via Google Search & official fact databases!',
-      'Hinglish, screenshots, or videos—I audit them all!',
+      'Hinglish, screenshots, or claims—I audit them all!',
       'Fact-check receipt ready for WhatsApp deployment!'
     ];
     const nextQuip = quips[Math.floor(Math.random() * quips.length)];
@@ -105,53 +110,52 @@ export default function RovingRobot({
 
   return (
     <div
-      className={`fixed z-30 transition-all duration-300 select-none pointer-events-none sm:pointer-events-auto ${
-        isDocked ? 'bottom-5 right-5' : 'bottom-3 sm:bottom-4'
+      ref={containerRef}
+      className={`fixed z-30 select-none pointer-events-none will-change-transform ${
+        isDocked ? 'bottom-5 right-5 left-auto' : 'bottom-2 sm:bottom-3 left-0'
       }`}
       style={{
-        left: isDocked ? 'auto' : `${position.x}px`,
-        transform: `translateY(${position.y}px)`,
+        transform: isDocked ? 'none' : `translate3d(${posRef.current.x}px, 0, 0)`
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Speech Bubble */}
+      {/* Speech Bubble (Non-blocking with pointer-events-none, dismiss button pointer-events-auto) */}
       {showSpeech && (
-        <div className="absolute -top-14 left-1/2 -translate-x-1/2 min-w-[190px] max-w-[240px] sm:max-w-[260px] bg-slate-900/95 border border-cyan-400/40 rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-[11px] font-medium text-cyan-200 shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-200 pointer-events-none sm:pointer-events-auto">
+        <div className="absolute -top-16 left-1/2 -translate-x-1/2 min-w-[200px] max-w-[260px] bg-slate-900/95 border border-cyan-400/40 rounded-xl px-2.5 py-1.5 text-[10px] sm:text-[11px] font-medium text-cyan-200 shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-200 pointer-events-none">
           <div className="flex items-center justify-between gap-1 mb-0.5">
             <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1">
-              <Radio className="w-2.5 h-2.5 animate-pulse" />
+              <Radio className="w-2.5 h-2.5 animate-pulse text-cyan-300" />
               UNIT-07 // TELEMETRY
             </span>
             <button
               onClick={() => setShowSpeech(false)}
-              className="text-slate-500 hover:text-slate-300 p-0.5 pointer-events-auto"
+              className="text-slate-500 hover:text-slate-300 p-0.5 pointer-events-auto transition-colors"
+              title="Dismiss speech"
             >
-              <X className="w-2.5 h-2.5" />
+              <X className="w-3 h-3" />
             </button>
           </div>
           <p className="leading-snug text-slate-100">{speechText}</p>
-          {/* Arrow */}
+          {/* Bubble Arrow Pointer */}
           <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 border-b border-r border-cyan-400/40 rotate-45" />
         </div>
       )}
 
-      {/* Roving Robot Body */}
+      {/* Roving Robot Body Container (Clickable) */}
       <div
         onClick={handleBotClick}
-        className="group relative cursor-pointer flex flex-col items-center pointer-events-auto"
+        className="group relative cursor-pointer flex flex-col items-center pointer-events-auto touch-manipulation"
       >
         {/* Scanning Cone when loading */}
         {isLoading && (
-          <div className="absolute -top-16 w-32 h-16 pointer-events-none overflow-hidden flex justify-center">
-            <div className="w-24 h-24 bg-gradient-to-b from-cyan-400/20 via-cyan-400/5 to-transparent clip-path-cone animate-pulse" />
+          <div className="absolute -top-14 w-28 h-14 pointer-events-none overflow-hidden flex justify-center">
+            <div className="w-20 h-20 bg-gradient-to-b from-cyan-400/30 via-cyan-400/10 to-transparent clip-path-cone animate-pulse" />
           </div>
         )}
 
-        {/* The SVG Robot */}
+        {/* The SVG Robot with Flip & Spin */}
         <div
           className={`relative transition-transform duration-300 ${
-            direction === -1 && !isDocked ? '-scale-x-100' : 'scale-x-100'
+            facingDir === -1 && !isDocked ? '-scale-x-100' : 'scale-x-100'
           }`}
           style={{
             transform: `rotate(${spinCount * 360}deg)`,
@@ -159,16 +163,16 @@ export default function RovingRobot({
           }}
         >
           <svg
-            width="56"
-            height="56"
+            width="50"
+            height="50"
             viewBox="0 0 64 64"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="drop-shadow-[0_0_12px_rgba(0,240,255,0.4)] hover:drop-shadow-[0_0_18px_rgba(0,240,255,0.7)] transition-all"
+            className="drop-shadow-[0_0_10px_rgba(0,240,255,0.45)] hover:drop-shadow-[0_0_16px_rgba(0,240,255,0.75)] transition-all"
           >
             {/* Hover Glow Ring */}
-            <circle cx="32" cy="56" r="16" fill="rgba(0, 240, 255, 0.15)" />
-            <ellipse cx="32" cy="56" rx="12" ry="3" fill="#00f0ff" opacity="0.6" className="animate-pulse" />
+            <circle cx="32" cy="56" r="14" fill="rgba(0, 240, 255, 0.15)" />
+            <ellipse cx="32" cy="56" rx="10" ry="2.5" fill="#00f0ff" opacity="0.6" className="animate-pulse" />
 
             {/* Antenna with Blinking LED */}
             <line x1="32" y1="14" x2="32" y2="4" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" />
@@ -188,12 +192,10 @@ export default function RovingRobot({
 
             {/* Expressive Eyes / Scan Visor */}
             {isLoading ? (
-              // Scanning laser sweep
               <g className="animate-pulse">
                 <rect x="22" y="24" width="20" height="3" rx="1.5" fill="#00f0ff" />
               </g>
             ) : isAlarm ? (
-              // Alert X eyes
               <g stroke="#f43f5e" strokeWidth="2" strokeLinecap="round">
                 <line x1="24" y1="23" x2="28" y2="27" />
                 <line x1="28" y1="23" x2="24" y2="27" />
@@ -201,13 +203,11 @@ export default function RovingRobot({
                 <line x1="40" y1="23" x2="36" y2="27" />
               </g>
             ) : isHappy ? (
-              // Happy caret eyes ^^
               <g stroke="#10b981" strokeWidth="2" strokeLinecap="round" fill="none">
                 <path d="M23 26L26 23L29 26" />
                 <path d="M35 26L38 23L41 26" />
               </g>
             ) : (
-              // Normal cyan glowing round eyes
               <g fill="#00f0ff">
                 <circle cx="26" cy="26" r="3" />
                 <circle cx="38" cy="26" r="3" />
@@ -235,14 +235,14 @@ export default function RovingRobot({
           </svg>
         </div>
 
-        {/* Hover Micro Controls */}
-        <div className="absolute -bottom-7 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/90 border border-slate-800 rounded-lg px-2 py-0.5 text-[9px] text-slate-300">
+        {/* Micro Controls (Dock / Roam / Hide) */}
+        <div className="flex items-center gap-1 mt-1 opacity-70 group-hover:opacity-100 transition-opacity bg-slate-900/90 border border-slate-800 rounded-lg px-2 py-0.5 text-[9px] text-slate-300 pointer-events-auto">
           <button
             onClick={(e) => {
               e.stopPropagation();
               setIsDocked(!isDocked);
             }}
-            className="hover:text-cyan-400 flex items-center gap-1 font-mono"
+            className="hover:text-cyan-400 flex items-center gap-1 font-mono transition-colors"
             title={isDocked ? 'Release Roving' : 'Dock Unit-07'}
           >
             {isDocked ? <Maximize2 className="w-2.5 h-2.5" /> : <Minimize2 className="w-2.5 h-2.5" />}
@@ -254,7 +254,7 @@ export default function RovingRobot({
               e.stopPropagation();
               if (onToggle) onToggle();
             }}
-            className="hover:text-rose-400"
+            className="hover:text-rose-400 transition-colors"
             title="Dismiss Companion"
           >
             Hide
